@@ -1,0 +1,30 @@
+{
+  "name": "described-functions",
+  "version": "0.0.1",
+  "description": "Utilities and typings to describe and validate functions. Useful when dealing with agentic function calling and MCP.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ggondim/described-functions.git"
+  },
+  "author": {
+    "email": "gustavospgondim@gmail.com",
+    "name": "Gustavo Gondim",
+    "url": "https://github.com/ggondim"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ggondim/described-functions/issues"
+  },
+  "homepage": "https://github.com/ggondim/described-functions#readme",
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "json-schema-to-ts": "^3.1.1"
+  }
+}
