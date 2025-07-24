@@ -8,7 +8,6 @@ export type FuncType<
 	/**
 	 * The function that implements the described function logic.
 	 *
-	 * @memberof DescribedFunc
 	 * @param {TInput} input The input arguments.
 	 * @param {any} context The context in which the function is invoked.
 	 * @returns {Promise<TResult>} The result of the function invocation.
@@ -21,7 +20,6 @@ export type EndpointType = {
 	/**
 	 * The HTTP endpoint configuration, if this described function is an HTTP endpoint.
 	 *
-	 * @memberof DescribedFunc
 	 */
 	httpEndpoint: {
 		/**
@@ -47,7 +45,7 @@ export type EndpointType = {
  *  caching.
  *
  * @export
- * @interface DescribedFunc
+ * @type DescribedFunc
  * @template TInputSchema The JSON schema for the input arguments.
  * @template TResultSchema The JSON schema for the function/endpoint result.
  * @template TInput The typed input arguments (usually JSONSchema<TInputSchema>).
@@ -64,7 +62,6 @@ export type DescribedFunc<
 	 * The unique name of this described function.
 	 *
 	 * @type {string}
-	 * @memberof DescribedFunc
 	 */
 	name: string;
 
@@ -73,7 +70,6 @@ export type DescribedFunc<
 	 *  agentic discovery/inference.
 	 *
 	 * @type {string}
-	 * @memberof DescribedFunc
 	 */
 	description: string;
 
@@ -81,7 +77,6 @@ export type DescribedFunc<
 	 * The intents of this function, which can determine the HTTP method if it is an HTTP endpoint.
 	 *
 	 * @type {['resource', 'action']}
-	 * @memberof DescribedFunc
 	 */
 	intents?: ["resource", "action"];
 
@@ -89,7 +84,6 @@ export type DescribedFunc<
 	 * The JSON schema for the input arguments.
 	 *
 	 * @type {TInputSchema}
-	 * @memberof DescribedFunc
 	 */
 	inputSchema: TInputSchema;
 
@@ -97,7 +91,6 @@ export type DescribedFunc<
 	 * The JSON schema for the function/endpoint result.
 	 *
 	 * @type {TResultSchema}
-	 * @memberof DescribedFunc
 	 */
 	resultSchema: TResultSchema;
 
@@ -105,8 +98,7 @@ export type DescribedFunc<
 	 * Determines a cache duration (in milliseconds) to be implemented by invokers/wrappers of this
 	 *  described function.
 	 *
-	 * @type {ICache}
-	 * @memberof DescribedFunc
+	 * @type {number}
 	 */
 	cache?: number;
 
@@ -115,7 +107,6 @@ export type DescribedFunc<
 	 *  encapsulated in application servers.
 	 *
 	 * @type {number}
-	 * @memberof DescribedFunc
 	 */
 	clientCache?: number;
 };
