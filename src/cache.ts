@@ -3,8 +3,6 @@ export type AcceptableCacheValue = object | object[] | string | null;
 /**
  * Generic interface for a cache system.
  *
- * @export
- * @interface ICache
  * @template T The type of value that can be stored in the cache.
  *            Defaults to AcceptableCacheValue, which can be an object, array of objects,
  *            or string.
@@ -13,7 +11,6 @@ export interface ICache<T = AcceptableCacheValue> {
   /**
    * Retrieves a value from the cache by its key.
    *
-   * @memberof ICache
    * @param {string} key The key associated with the cached value.
    * @return {Promise<T>} A promise that resolves to the cached value, or null.
    */
@@ -22,7 +19,6 @@ export interface ICache<T = AcceptableCacheValue> {
   /**
    * Sets a value in the cache with a specified key and time-to-live (TTL).
    *
-   * @memberof ICache
    * @param {string} key The key to associate with the cached value.
    * @param {T} value The value to cache.
    * @param {number?} ttl The time-to-live for the cached value in milliseconds.
@@ -33,7 +29,6 @@ export interface ICache<T = AcceptableCacheValue> {
   /**
    * Deletes a value from the cache by its key.
    *
-   * @memberof ICache
    * @param {string} key The key associated with the cached value to delete.
    * @return {Promise<void>} A promise that resolves when the value is deleted.
    */
@@ -41,9 +36,6 @@ export interface ICache<T = AcceptableCacheValue> {
 
   /**
    * Indicates whether the cache should stringify objects before storing them.
-   *
-   * @type {boolean}
-   * @memberof ICache
    */
   stringify: boolean;
 }
@@ -51,7 +43,6 @@ export interface ICache<T = AcceptableCacheValue> {
 /**
  * Generates a SHA-1 hash for an object.
  *
- * @export
  * @param {AcceptableCacheValue} obj The object to hash.
  * @return {string} The SHA-1 hash of the object as a hexadecimal string.
  * @throws {Error} If the environment does not support the required crypto functionality.

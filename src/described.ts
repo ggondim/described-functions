@@ -25,14 +25,12 @@ export type EndpointType = {
 		/**
 		 * The HTTP method (GET, POST, etc.) for the endpoint.
 		 *
-		 * @type {("GET" | "POST")}
 		 */
 		method: "GET" | "POST";
 
 		/**
 		 * The URL of the HTTP endpoint.
 		 *
-		 * @type {string}
 		 */
 		url: string;
 	};
@@ -44,8 +42,6 @@ export type EndpointType = {
  *  input and output schemas, alongside additional metadata such as description, intents and
  *  caching.
  *
- * @export
- * @type DescribedFunc
  * @template TInputSchema The JSON schema for the input arguments.
  * @template TResultSchema The JSON schema for the function/endpoint result.
  * @template TInput The typed input arguments (usually JSONSchema<TInputSchema>).
@@ -61,7 +57,6 @@ export type DescribedFunc<
 	/**
 	 * The unique name of this described function.
 	 *
-	 * @type {string}
 	 */
 	name: string;
 
@@ -69,28 +64,24 @@ export type DescribedFunc<
 	 * A human-readable description of the function. Used for documentation and
 	 *  agentic discovery/inference.
 	 *
-	 * @type {string}
 	 */
 	description: string;
 
 	/**
 	 * The intents of this function, which can determine the HTTP method if it is an HTTP endpoint.
 	 *
-	 * @type {['resource', 'action']}
 	 */
 	intents?: ["resource", "action"];
 
 	/**
 	 * The JSON schema for the input arguments.
 	 *
-	 * @type {TInputSchema}
 	 */
 	inputSchema: TInputSchema;
 
 	/**
 	 * The JSON schema for the function/endpoint result.
 	 *
-	 * @type {TResultSchema}
 	 */
 	resultSchema: TResultSchema;
 
@@ -98,7 +89,6 @@ export type DescribedFunc<
 	 * Determines a cache duration (in milliseconds) to be implemented by invokers/wrappers of this
 	 *  described function.
 	 *
-	 * @type {number}
 	 */
 	cache?: number;
 
@@ -106,7 +96,6 @@ export type DescribedFunc<
 	 * Indicates a client-side cache duration (in milliseconds) to be advertised by invokers/wrappers
 	 *  encapsulated in application servers.
 	 *
-	 * @type {number}
 	 */
 	clientCache?: number;
 };

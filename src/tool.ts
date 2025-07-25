@@ -10,21 +10,19 @@ import type { ILogFunction, ILogProvider } from "./log";
  */
 export type InvokeToolOptions = {
   /**
-   * Cache options for the tool invocation.
-   * If set to `false`, it forces the tool to not use any caching.
-   * If set to a string, it indicates a named cache (e.g., Redis).
-   * If set to an `ICache` instance, it uses that cache directly.
-   * If not provided, it defaults to an in-memory cache.
-   *
-   * @type {(false | string | ICache)}
-   */
+ * Cache options for the tool invocation.
+ * If set to `false`, it forces the tool to not use any caching.
+ * If set to a string, it indicates a named cache (e.g., Redis).
+ * If set to an `ICache` instance, it uses that cache directly.
+ * If not provided, it defaults to an in-memory cache.
+ *
+ */
   cache?: false | string | ICache;
 
   /**
    * Optional log provider or function for logging during tool invocation.
    * If provided, it can be used to log messages related to the tool's execution.
    *
-   * @type {(ILogProvider | ILogFunction)}
    */
   log?: ILogProvider | ILogFunction;
 };
@@ -138,8 +136,6 @@ export type Tool<
 
 /**
  * Transforms a described function into a tool that can be invoked with input validation and caching.
- *
- * @export
  */
 export function makeTool<
   TInputSchema extends JSONSchema,
