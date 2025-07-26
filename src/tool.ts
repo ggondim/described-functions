@@ -35,26 +35,26 @@ export class ToolClass<
 > {
   config: DescribedFunc<TInputSchema, TResultSchema, TInput, TResult>;
 
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  // biome-ignore lint/suspicious/noExplicitAny: cannot determine type
   callFunc: (input: AcceptableCacheValue, context?: any) => Promise<AcceptableCacheValue>;
 
   constructor(config: DescribedFunc<TInputSchema, TResultSchema, TInput, TResult>) {
     this.config = config;
 
-    // if (!config.func && !config.httpEndpoint) {
-    //   throw new Error("Tool configuration must have either a function or an endpoint defined.");
-    // }
+    if ((!config.func && !config.httpEndpoint) || (config.func && config.httpEndpoint)) {
+      throw new Error("Tool configuration must have either a function or an endpoint defined.");
+    }
 
     if (config.func) {
       this.callFunc = config.func;
     } else {
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      // this.callFunc = async (input: AcceptableCacheValue, context?: any) => {
-      //   if (!config.httpEndpoint) {
-      //     throw new Error("Tool configuration must have a function or an HTTP endpoint defined.");
-      //   }
-      //   return makeRequest(config.httpEndpoint.url, input, config.httpEndpoint.method);
-      // };
+      // biome-ignore lint/suspicious/noExplicitAny: cannot determine type
+      this.callFunc = async (input: AcceptableCacheValue, context?: any) => {
+        if (!config.httpEndpoint) {
+          throw new Error("Tool configuration must have a function or an HTTP endpoint defined.");
+        }
+        return makeRequest(config.httpEndpoint.url, input, config.httpEndpoint.method);
+      };
     }
   }
 
@@ -67,7 +67,7 @@ export class ToolClass<
    * @returns {Promise<TResult>} A promise that resolves to the result of the function invocation
    *  or HTTP request.
    */
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  // biome-ignore lint/suspicious/noExplicitAny: cannot determine type
   async invoke(input: TInput, context?: any, options?: InvokeToolOptions): Promise<TResult> {
     // Validate input before invoking the function
     this.validateInput(input);

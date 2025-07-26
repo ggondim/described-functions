@@ -1,40 +1,4 @@
 import type { FromSchema, JSONSchema } from "json-schema-to-ts";
-import type { TypeXOR } from "ts-advanced-types"
-
-export type FuncType<
-	TInput,
-	TResult,
-> = {
-	/**
-	 * The function that implements the described function logic.
-	 *
-	 * @param {TInput} input The input arguments.
-	 * @param {any} context The context in which the function is invoked.
-	 * @returns {Promise<TResult>} The result of the function invocation.
-	 */
-	// biome-ignore lint/suspicious/noExplicitAny: cannot determine type
-	func: (input: TInput, context: any) => Promise<TResult>;
-}
-
-export type EndpointType = {
-	/**
-	 * The HTTP endpoint configuration, if this described function is an HTTP endpoint.
-	 *
-	 */
-	httpEndpoint: {
-		/**
-		 * The HTTP method (GET, POST, etc.) for the endpoint.
-		 *
-		 */
-		method: "GET" | "POST";
-
-		/**
-		 * The URL of the HTTP endpoint.
-		 *
-		 */
-		url: string;
-	};
-};
 
 /**
  * Represents an implemented function or an HTTP endpoint that can be invoked as a tool. A
@@ -53,7 +17,7 @@ export type DescribedFunc<
 	TResultSchema extends JSONSchema,
 	TInput = FromSchema<TInputSchema>,
 	TResult = FromSchema<TResultSchema>,
-> = FuncType<TInput, TResult> & {
+> = {
 	/**
 	 * The unique name of this described function.
 	 *
@@ -71,7 +35,7 @@ export type DescribedFunc<
 	 * The intents of this function, which can determine the HTTP method if it is an HTTP endpoint.
 	 *
 	 */
-	intents?: ["resource", "action"];
+	intents?: "resource" | "action";
 
 	/**
 	 * The JSON schema for the input arguments.
@@ -98,4 +62,32 @@ export type DescribedFunc<
 	 *
 	 */
 	clientCache?: number;
+
+	/**
+	 * The function that implements the described function logic.
+	 *
+	 * @param {TInput} input The input arguments.
+	 * @param {any} context The context in which the function is invoked.
+	 * @returns {Promise<TResult>} The result of the function invocation.
+	 */
+	// biome-ignore lint/suspicious/noExplicitAny: cannot determine type
+	func?: (input: TInput, context: any) => Promise<TResult>;
+
+	/**
+	 * The HTTP endpoint configuration, if this described function is an HTTP endpoint.
+	 *
+	 */
+	httpEndpoint?: {
+		/**
+		 * The HTTP method (GET, POST, etc.) for the endpoint.
+		 *
+		 */
+		method: "GET" | "POST";
+
+		/**
+		 * The URL of the HTTP endpoint.
+		 *
+		 */
+		url: string;
+	};
 };
