@@ -41,20 +41,20 @@ export class ToolClass<
   constructor(config: DescribedFunc<TInputSchema, TResultSchema, TInput, TResult>) {
     this.config = config;
 
-    if (!config.func && !config.httpEndpoint) {
-      throw new Error("Tool configuration must have either a function or an endpoint defined.");
-    }
+    // if (!config.func && !config.httpEndpoint) {
+    //   throw new Error("Tool configuration must have either a function or an endpoint defined.");
+    // }
 
     if (config.func) {
       this.callFunc = config.func;
     } else {
       // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      this.callFunc = async (input: AcceptableCacheValue, context?: any) => {
-        if (!config.httpEndpoint) {
-          throw new Error("Tool configuration must have a function or an HTTP endpoint defined.");
-        }
-        return makeRequest(config.httpEndpoint.url, input, config.httpEndpoint.method);
-      };
+      // this.callFunc = async (input: AcceptableCacheValue, context?: any) => {
+      //   if (!config.httpEndpoint) {
+      //     throw new Error("Tool configuration must have a function or an HTTP endpoint defined.");
+      //   }
+      //   return makeRequest(config.httpEndpoint.url, input, config.httpEndpoint.method);
+      // };
     }
   }
 
