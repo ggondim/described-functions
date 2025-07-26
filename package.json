@@ -1,6 +1,6 @@
 {
   "name": "described-functions",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Utilities and typings to describe and validate functions. Useful when dealing with agentic function calling and MCP.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
