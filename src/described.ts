@@ -53,7 +53,7 @@ export type DescribedFunc<
 	TResultSchema extends JSONSchema,
 	TInput = FromSchema<TInputSchema>,
 	TResult = FromSchema<TResultSchema>,
-> = TypeXOR<FuncType<TInput, TResult>, EndpointType> & {
+> = FuncType<TInput, TResult> & {
 	/**
 	 * The unique name of this described function.
 	 *
