@@ -1,7 +1,8 @@
 export type AcceptableCacheValue = object | object[] | string | null;
 
 /**
- * Generic interface for a cache system.
+ * Generic interface for a cache system, following the Map class structure. Compatible with
+ *  many cache libraries.
  *
  * @template T The type of value that can be stored in the cache.
  *            Defaults to AcceptableCacheValue, which can be an object, array of objects,
@@ -17,6 +18,14 @@ export interface ICache<T = AcceptableCacheValue> {
   get: (key: string) => Promise<T>;
 
   /**
+   * Checks if a value exists in the cache by its key.
+   *
+   * @param {string} key The key to check in the cache.
+   * @return {Promise<boolean>} A promise that resolves to true if the key exists, false otherwise.
+   */
+  has: (key: string) => Promise<boolean>;
+
+  /**
    * Sets a value in the cache with a specified key and time-to-live (TTL).
    *
    * @param {string} key The key to associate with the cached value.
@@ -24,7 +33,7 @@ export interface ICache<T = AcceptableCacheValue> {
    * @param {number?} ttl The time-to-live for the cached value in milliseconds.
    * @return {Promise<void>} A promise that resolves when the value is set.
    */
-  set: (key: string, value: T, ttl: number) => Promise<void>;
+  set: (key: string, value: T, ttl: number) => Promise<boolean>;
 
   /**
    * Deletes a value from the cache by its key.
@@ -32,12 +41,14 @@ export interface ICache<T = AcceptableCacheValue> {
    * @param {string} key The key associated with the cached value to delete.
    * @return {Promise<void>} A promise that resolves when the value is deleted.
    */
-  delete: (key: string) => Promise<void>;
+  delete: (key: string) => Promise<boolean>;
 
   /**
-   * Indicates whether the cache should stringify objects before storing them.
+   * Clears all values from the cache.
+   *
+   * @return {Promise<void>} A promise that resolves when the cache is cleared.
    */
-  stringify: boolean;
+  clear: () => Promise<void>;
 }
 
 /**
@@ -69,42 +80,4 @@ export async function hashObjectSHA1(obj: AcceptableCacheValue) {
   return Array.from(new Uint8Array(buffer))
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
-}
-
-type MemoryCacheValue = { value: string; expiresAt: number };
-
-export class MemoryCache implements ICache {
-  stringify: boolean;
-
-  constructor() {
-    this.stringify = true;
-  }
-
-  private get cache(): Map<string, MemoryCacheValue> {
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    const globalVar: any = typeof window === 'undefined' ? global : window;
-    if (!globalVar._memoryCache) {
-      globalVar._memoryCache = new Map<string, MemoryCacheValue>();
-    }
-    return globalVar._memoryCache;
-  }
-
-  async get(key: string): Promise<AcceptableCacheValue> {
-    const cached = this.cache.get(key);
-    if (cached && cached.expiresAt > Date.now()) {
-      return JSON.parse(cached.value as unknown as string);
-    }
-    return null;
-  }
-
-  async set(key: string, value: AcceptableCacheValue, ttl: number): Promise<void> {
-    this.cache.set(key, {
-      value: JSON.stringify(value),
-      expiresAt: Date.now() + ttl,
-    });
-  }
-
-  async delete(key: string): Promise<void> {
-    this.cache.delete(key);
-  }
 }

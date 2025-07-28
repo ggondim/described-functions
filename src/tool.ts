@@ -2,8 +2,9 @@ import Ajv, { ValidationError } from "ajv";
 import type { JSONSchema } from "json-schema-to-ts";
 import type { DescribedFunc } from "./described";
 import type { AcceptableCacheValue, ICache } from "./cache";
-import { hashObjectSHA1, MemoryCache } from "./cache";
+import { hashObjectSHA1 } from "./cache";
 import type { ILogFunction, ILogProvider } from "./log";
+import Keyv from "keyv";
 
 /**
  * Represents options when invoking a tool.
@@ -17,7 +18,7 @@ export type InvokeToolOptions = {
  * If not provided, it defaults to an in-memory cache.
  *
  */
-  cache?: false | string | ICache;
+  cache?: false | ICache;
 
   /**
    * Optional log provider or function for logging during tool invocation.
@@ -37,6 +38,11 @@ export class ToolClass<
 
   // biome-ignore lint/suspicious/noExplicitAny: cannot determine type
   callFunc: (input: AcceptableCacheValue, context?: any) => Promise<AcceptableCacheValue>;
+
+  cache?: ICache<AcceptableCacheValue> = new Keyv<AcceptableCacheValue>();
+
+  keyFactory: (prefix: string, input: object) => string = (prefix, input) =>
+    `${prefix}:${hashObjectSHA1(input)}`;
 
   constructor(config: DescribedFunc<TInputSchema, TResultSchema, TInput, TResult>) {
     this.config = config;
@@ -76,8 +82,8 @@ export class ToolClass<
 
     // If caching is enabled, check the cache first
     if (options?.cache !== false && this.config.cache) {
-      const key = DEFAULT_CACHE_KEY_FACTORY(this.config.name, input as object);
-      const cache = resolveCache(options.cache);
+      const key = this.keyFactory(this.config.name, input as object);
+      const cache = options.cache ?? this.cache;
 
       const cachedResult = await cache.get(key);
       if (cachedResult) {
@@ -157,22 +163,6 @@ function basicAjvValidate(schema: JSONSchema, input: object): boolean {
     throw new ValidationError(validateInput.errors ?? []);
   }
   return isValid;
-}
-
-const DEFAULT_CACHE_KEY_FACTORY = (prefix: string, input: object): string =>
-  `${prefix}:${hashObjectSHA1(input)}`;
-
-function resolveCache(cache: string | ICache | undefined): ICache {
-  if (typeof cache === 'undefined') {
-    return new MemoryCache();
-  }
-
-  if (typeof cache === 'string') {
-    // Placeholder for a named cache, e.g., Redis or similar
-    return new MemoryCache(); // Replace with actual cache implementation
-  }
-
-  return cache;
 }
 
 async function makeRequest(
