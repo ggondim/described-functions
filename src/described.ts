@@ -89,5 +89,26 @@ export type DescribedFunc<
 		 *
 		 */
 		url: string;
+
+		/**
+		 * Indicates if the invoker is an intermediary (aka HTTP server) and it should send an HTTP
+		 *  redirect response (3xx) instead relying on the built-in Tool HTTP client.
+		 */
+		redirect?: true | 301 | 302;
+
+		/**
+		 * Indicates if the invoker is an intermediary (aka HTTP server) and it has original
+		 *  request headers to be forwarded to the built-in Tool HTTP client.
+		 *  If true, all headers are forwarded. If an array of strings, only the specified headers
+		 *  are forwarded.
+		 */
+		proxyHeaders?: true | string[];
+
+		/**
+		 * Additional headers to be sent with the request. Overrides the `proxyHeaders` if
+		 *  specified.
+		 */
+		// TODO: implement on makeRequest
+		// headers?: Record<string, string>;
 	};
 };
