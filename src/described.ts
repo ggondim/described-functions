@@ -102,6 +102,7 @@ export type DescribedFunc<
 		 *  If true, all headers are forwarded. If an array of strings, only the specified headers
 		 *  are forwarded.
 		 */
+		// TODO: implement on makeRequest
 		proxyHeaders?: true | string[];
 
 		/**
@@ -109,6 +110,9 @@ export type DescribedFunc<
 		 *  specified.
 		 */
 		// TODO: implement on makeRequest
-		// headers?: Record<string, string>;
+		// requestHeaders?: Record<string, string>;
+		// responseHeaders?: Record<string, string>;
+
+		// TODO: custom client (WinterCG compliant)
 	};
 };
