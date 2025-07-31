@@ -1,4 +1,6 @@
-import type { FromSchema, JSONSchema } from "json-schema-to-ts";
+import type { Static, TSchema } from "@sinclair/typebox";
+import type { JSONSchemaRaw } from "./schema/json-schema";
+import type { TFromSchema } from "./schema/typebox-fromschema";
 
 /**
  * Represents an implemented function or an HTTP endpoint that can be invoked as a tool. A
@@ -8,15 +10,15 @@ import type { FromSchema, JSONSchema } from "json-schema-to-ts";
  *
  * @template TInputSchema The JSON schema for the input arguments.
  * @template TResultSchema The JSON schema for the function/endpoint result.
- * @template TInput The typed input arguments (usually JSONSchema<TInputSchema>).
- * @template TResult The typed result (usually JSONSchema<TResultSchema>).
+ * @template TInput The typed input arguments (usually JSONSchemaRaw<TInputSchema>).
+ * @template TResult The typed result (usually JSONSchemaRaw<TResultSchema>).
  * @description This interface is used to describe a JavaScript function or an API endpoint with its input and output schemas. When used in an agentic context, it can be used to infer the function's purpose and how to invoke it.
  */
 export type DescribedFunc<
-	TInputSchema extends JSONSchema,
-	TResultSchema extends JSONSchema,
-	TInput = FromSchema<TInputSchema>,
-	TResult = FromSchema<TResultSchema>,
+	TInputSchema extends JSONSchemaRaw | TSchema,
+	TResultSchema extends JSONSchemaRaw | TSchema,
+	TInput = TInputSchema extends TSchema ? Static<TInputSchema> : TFromSchema<TInputSchema>,
+	TResult = TResultSchema extends TSchema ? Static<TResultSchema> : TFromSchema<TResultSchema>,
 > = {
 	/**
 	 * The unique name of this described function.
@@ -25,11 +27,23 @@ export type DescribedFunc<
 	name: string;
 
 	/**
+	 * The title of this described function, which can be used for display purposes.
+	 *
+	 */
+	title?: string;
+
+	/**
 	 * A human-readable description of the function. Used for documentation and
 	 *  agentic discovery/inference.
 	 *
 	 */
 	description: string;
+
+	/**
+	 * The tags associated with this function, which can be used for categorization or
+	 *  filtering.
+	 */
+	tags?: string[];
 
 	/**
 	 * The intents of this function, which can determine the HTTP method if it is an HTTP endpoint.
