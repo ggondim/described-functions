@@ -9,4 +9,7 @@ export type ILogFunction = (message: string, ...args: any[]) => void;
  */
 export interface ILogProvider {
   log: ILogFunction;
+  warn?: ILogFunction;
+  error?: ILogFunction;
+  debug?: ILogFunction;
 }
