@@ -1,4 +1,4 @@
-export type AcceptableCacheValue = object | object[] | string | null;
+import SuperJSON from "superjson";
 
 /**
  * Generic interface for a cache system, following the Map class structure. Compatible with
@@ -8,7 +8,7 @@ export type AcceptableCacheValue = object | object[] | string | null;
  *            Defaults to AcceptableCacheValue, which can be an object, array of objects,
  *            or string.
  */
-export interface ICache<T = AcceptableCacheValue> {
+export interface ICache<T> {
   /**
    * Retrieves a value from the cache by its key.
    *
@@ -54,12 +54,14 @@ export interface ICache<T = AcceptableCacheValue> {
 /**
  * Generates a SHA-1 hash for an object.
  *
- * @param {AcceptableCacheValue} obj The object to hash.
  * @return {string} The SHA-1 hash of the object as a hexadecimal string.
  * @throws {Error} If the environment does not support the required crypto functionality.
  */
-export async function hashObjectSHA1(obj: AcceptableCacheValue) {
-  const input = JSON.stringify(obj);
+
+// biome-ignore lint/suspicious/noExplicitAny: cannot determine the type of obj
+export async function hashObjectSHA1(obj: any) {
+  const input = SuperJSON.stringify(obj);
+  // TODO: extend superjson with Buffer, Uint8Array, and BSON types
 
   // Node.js environment
   if (typeof window === 'undefined' && typeof require === 'function') {

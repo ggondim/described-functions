@@ -1,33 +1,23 @@
+import { Static, Type } from '@sinclair/typebox';
 import type { DescribedFunc } from '../src/described';
+import { FromSchema, type TFromSchema } from '../src/schema/typebox-fromschema';
 import { makeTool } from '../src/tool';
 
-const inputSchema = {
-  type: 'object',
-  properties: {
-    name: {
-      type: 'string',
-      description: 'The name of the person to greet.',
-    },
-    age: {
-      type: 'number',
-      description: 'The age of the person to greet.',
-    },
-  },
+const inputSchema = Type.Object({
+  name: Type.String({ description: 'The name of the person to greet.' }),
+  age: Type.Optional(Type.Number({ description: 'The age of the person to greet.' })),
+}, {
+  additionalProperties: false,
   required: ['name'],
-  additionalProperties: false,
-} as const;
+});
 
-const resultSchema = {
-  type: 'object',
-  properties: {
-    greeting: {
-      type: 'string',
-      description: 'A greeting message for the person.',
-    },
-  },
-  required: ['greeting'],
+const resultSchema = Type.Object({
+  greeting: Type.String({ description: 'A greeting message for the person.' }),
+}, {
   additionalProperties: false,
-} as const;
+  required: ['greeting'],
+});
+
 
 const greetingFunc: DescribedFunc<
   typeof inputSchema,

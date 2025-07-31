@@ -1,15 +1,24 @@
-import Ajv, { ValidationError } from "ajv";
-import type { JSONSchema } from "json-schema-to-ts";
-import type { DescribedFunc } from "./described";
-import type { AcceptableCacheValue, ICache } from "./cache";
-import { hashObjectSHA1 } from "./cache";
-import type { ILogFunction, ILogProvider } from "./log";
+
+import { Kind, type Static, type TSchema } from "@sinclair/typebox";
+import type { TypeCheck, ValueError } from '@sinclair/typebox/compiler';
+import { TypeCompiler } from '@sinclair/typebox/compiler';
 import Keyv from "keyv";
+import type { ICache } from "./cache";
+import { hashObjectSHA1 } from "./cache";
+import type { DescribedFunc } from "./described";
+import type { ILogFunction, ILogProvider } from "./log";
+import type { JSONSchemaRaw } from "./schema/json-schema";
+import { FromSchema, type TFromSchema } from "./schema/typebox-fromschema";
+
+export type ValidateOptions = {
+  validateInput?: boolean;
+  validateResult?: boolean;
+};
 
 /**
  * Represents options when invoking a tool.
  */
-export type InvokeToolOptions = {
+export type InvokeToolOptions<T = unknown> = {
   /**
  * Cache options for the tool invocation.
  * If set to `false`, it forces the tool to not use any caching.
@@ -18,7 +27,7 @@ export type InvokeToolOptions = {
  * If not provided, it defaults to an in-memory cache.
  *
  */
-  cache?: false | ICache;
+  cache?: false | ICache<T>;
 
   /**
    * Optional log provider or function for logging during tool invocation.
@@ -26,25 +35,39 @@ export type InvokeToolOptions = {
    *
    */
   log?: ILogProvider | ILogFunction;
-};
+} & ValidateOptions;
+
+export class ValidationError extends Error {
+  constructor(public errors: ValueError[], public type?: string) {
+    super(`Schema validation failed ${type ? `(${type})` : ""}`);
+    this.name = "ValidationError";
+  }
+  toString() {
+    return this.errors.map((error) => `- ${error.path}: ${error.message}`).join("\n");
+  }
+}
 
 export class ToolClass<
-  TInputSchema extends JSONSchema,
-  TResultSchema extends JSONSchema,
-  TInput extends object | object[],
-  TResult extends object | object[]
+  TInputSchema extends JSONSchemaRaw | TSchema,
+  TResultSchema extends JSONSchemaRaw | TSchema,
+  TInput = TInputSchema extends TSchema ? Static<TInputSchema> : TFromSchema<TInputSchema>,
+  TResult = TResultSchema extends TSchema ? Static<TResultSchema> : TFromSchema<TResultSchema>,
 > {
   config: DescribedFunc<TInputSchema, TResultSchema, TInput, TResult>;
 
   // biome-ignore lint/suspicious/noExplicitAny: cannot determine type
-  callFunc: (input: AcceptableCacheValue, context?: any) => Promise<AcceptableCacheValue>;
+  callFunc: (input: TInput, context?: any) => Promise<TResult>;
 
-  cache?: ICache<AcceptableCacheValue> = new Keyv<AcceptableCacheValue>();
+  cache?: ICache<unknown> = new Keyv<unknown>();
 
   keyFactory: (prefix: string, input: object) => string = (prefix, input) =>
     `${prefix}:${hashObjectSHA1(input)}`;
 
-  constructor(config: DescribedFunc<TInputSchema, TResultSchema, TInput, TResult>) {
+  compiledInputSchema: TypeCheck<TSchema>;
+
+  compiledResultSchema: TypeCheck<TSchema>;
+
+  constructor(config: DescribedFunc<TInputSchema, TResultSchema, TInput, TResult> & ValidateOptions) {
     this.config = config;
 
     if ((!config.func && !config.httpEndpoint) || (config.func && config.httpEndpoint)) {
@@ -55,12 +78,28 @@ export class ToolClass<
       this.callFunc = config.func;
     } else {
       // biome-ignore lint/suspicious/noExplicitAny: cannot determine type
-      this.callFunc = async (input: AcceptableCacheValue, context?: any) => {
+      this.callFunc = async (input: TInput, context?: any) => {
         if (!config.httpEndpoint) {
           throw new Error("Tool configuration must have a function or an HTTP endpoint defined.");
         }
         return makeRequest(config.httpEndpoint.url, input, config.httpEndpoint.method);
       };
+    }
+
+    // CONVERT SCHEMAS TO TYPEBOX SCHEMAS
+    if (typeof config.inputSchema[Kind] !== "string") {
+      config.inputSchema = FromSchema(config.inputSchema) as unknown as TInputSchema;
+    }
+    if (typeof config.resultSchema[Kind] !== "string") {
+      config.resultSchema = FromSchema(config.resultSchema) as unknown as TResultSchema;
+    }
+
+    // COMPILE SCHEMAS IF VALIDATION IS ENABLED (DEFAULT)
+    if (config?.validateInput !== false) {
+      this.compiledInputSchema = TypeCompiler.Compile(config.inputSchema as TSchema);
+    }
+    if (config?.validateResult !== false) {
+      this.compiledResultSchema = TypeCompiler.Compile(config.resultSchema as TSchema);
     }
   }
 
@@ -76,7 +115,9 @@ export class ToolClass<
   // biome-ignore lint/suspicious/noExplicitAny: cannot determine type
   async invoke(input: TInput, context?: any, options?: InvokeToolOptions): Promise<TResult> {
     // Validate input before invoking the function
-    this.validateInput(input);
+    if (this.compiledInputSchema) {
+      this.validateInput(input);
+    }
 
     let result: TResult;
 
@@ -107,10 +148,13 @@ export class ToolClass<
    *
    * @param {TInput} input The input to validate.
    * @returns {boolean} Returns true if the input is valid, otherwise throws a ValidationError.
-   * @throws {ValidationError} If the input does not conform to the schema.
    */
   validateInput(input: TInput): boolean {
-    return basicAjvValidate(this.config.inputSchema, input as object);
+    const errors = this.compiledInputSchema.Errors(input as unknown);
+    if (errors.First()) {
+      throw new ValidationError([...errors], "input");
+    }
+    return true;
   }
 
   /**
@@ -118,10 +162,13 @@ export class ToolClass<
    *
    * @param {TResult} result The result to validate.
    * @returns {boolean} Returns true if the result is valid, otherwise throws a ValidationError.
-   * @throws {ValidationError} If the result does not conform to the schema.
    */
   validateResult(result: TResult): boolean {
-    return basicAjvValidate(this.config.resultSchema, result as object);
+    const errors = this.compiledResultSchema.Errors(result as unknown);
+    if (errors.First()) {
+      throw new ValidationError([...errors], "result");
+    }
+    return true;
   }
 }
 
@@ -133,10 +180,10 @@ export class ToolClass<
  *  function's caching configuration.
  */
 export type Tool<
-  TInputSchema extends JSONSchema,
-  TResultSchema extends JSONSchema,
-  TInput extends object | object[],
-  TResult extends object | object[]
+	TInputSchema extends JSONSchemaRaw | TSchema,
+	TResultSchema extends JSONSchemaRaw | TSchema,
+	TInput = TInputSchema extends TSchema ? Static<TInputSchema> : TFromSchema<TInputSchema>,
+	TResult = TResultSchema extends TSchema ? Static<TResultSchema> : TFromSchema<TResultSchema>,
 > = DescribedFunc<TInputSchema, TResultSchema, TInput, TResult>
   & ToolClass<TInputSchema, TResultSchema, TInput, TResult>;
 
@@ -144,10 +191,10 @@ export type Tool<
  * Transforms a described function into a tool that can be invoked with input validation and caching.
  */
 export function makeTool<
-  TInputSchema extends JSONSchema,
-  TResultSchema extends JSONSchema,
-  TInput extends object | object[],
-  TResult extends object | object[]
+	TInputSchema extends JSONSchemaRaw | TSchema,
+	TResultSchema extends JSONSchemaRaw | TSchema,
+	TInput = TInputSchema extends TSchema ? Static<TInputSchema> : TFromSchema<TInputSchema>,
+	TResult = TResultSchema extends TSchema ? Static<TResultSchema> : TFromSchema<TResultSchema>,
 >(
   config: DescribedFunc<TInputSchema, TResultSchema, TInput, TResult>
 ): Tool<TInputSchema, TResultSchema, TInput, TResult> {
@@ -155,21 +202,11 @@ export function makeTool<
   return Object.assign(tool, config);
 }
 
-function basicAjvValidate(schema: JSONSchema, input: object): boolean {
-  const ajv = new Ajv();
-  const validateInput = ajv.compile(schema);
-  const isValid = validateInput(input);
-  if (!isValid) {
-    throw new ValidationError(validateInput.errors ?? []);
-  }
-  return isValid;
-}
-
-async function makeRequest(
+async function makeRequest<TInput, TResult>(
   url: string,
-  data: AcceptableCacheValue,
+  data: TInput,
   method?: "GET" | "POST",
-): Promise<AcceptableCacheValue> {
+): Promise<TResult> {
   if (!fetch) {
     throw new Error("Fetch API is not available in this environment.");
   }
@@ -205,10 +242,10 @@ async function makeRequest(
 
   const contentType = response.headers.get("Content-Type");
   if (contentType?.includes("application/json")) {
-    return response.json() as Promise<AcceptableCacheValue>;
+    return response.json() as Promise<TResult>;
   }
   if (contentType?.includes("text/plain")) {
-    return response.text() as Promise<AcceptableCacheValue>;
+    return response.text() as Promise<TResult>;
   }
 
   throw new Error(`Unsupported or missing content type: ${contentType ?? "none"}`);
