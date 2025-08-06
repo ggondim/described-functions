@@ -60,8 +60,8 @@ export class ToolClass<
 
   cache?: ICache<unknown> = new Keyv<unknown>();
 
-  keyFactory: (prefix: string, input: object) => string = (prefix, input) =>
-    `${prefix}:${hashObjectSHA1(input)}`;
+  keyFactory: (prefix: string, input: object) => Promise<string> = async (prefix, input) =>
+    `${prefix}:${await hashObjectSHA1(input)}`;
 
   compiledInputSchema: TypeCheck<TSchema>;
 
