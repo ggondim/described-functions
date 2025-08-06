@@ -123,7 +123,7 @@ export class ToolClass<
 
     // If caching is enabled, check the cache first
     if (options?.cache !== false && this.config.cache && this.config.intents === "resource") {
-      const key = this.keyFactory(this.config.name, input as object);
+      const key = await this.keyFactory(this.config.name, input as object);
       const cache = options.cache ?? this.cache;
 
       const cachedResult = await cache.get(key);
