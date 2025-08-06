@@ -122,7 +122,7 @@ export class ToolClass<
     let result: TResult;
 
     // If caching is enabled, check the cache first
-    if (options?.cache !== false && this.config.cache) {
+    if (options?.cache !== false && this.config.cache && this.config.intents === "resource") {
       const key = this.keyFactory(this.config.name, input as object);
       const cache = options.cache ?? this.cache;
 
@@ -134,9 +134,10 @@ export class ToolClass<
       result = await this.callFunc(input, context) as TResult;
       // Store the result in the cache
       await cache.set(key, result, this.config.cache);
+    } else {
+      // Skip caching
+      result = await this.callFunc(input, context) as TResult;
     }
-
-    result = await this.callFunc(input, context) as TResult;
 
     // Validate the result after invoking the function
     this.validateResult(result);
